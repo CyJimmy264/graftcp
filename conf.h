@@ -24,9 +24,10 @@ struct graftcp_conf {
 	uint16_t *local_port;
 	char *pipe_path;
 	char *blackip_file_path;
-	char *whiteip_file_path;
-	bool *ignore_local;
-	char *username;
+        char *whiteip_file_path;
+        bool *ignore_local;
+        char *username;
+        char *log_file_path;
 };
 
 typedef int (*config_cb)(const char *, const char *, struct graftcp_conf *);
