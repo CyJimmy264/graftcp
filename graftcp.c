@@ -58,10 +58,10 @@ static int exit_code = 0;
 static FILE *LOG_FILE = NULL;
 
 #define LOG(...) do { \
-        if (LOG_FILE) { \
-                fprintf(LOG_FILE, __VA_ARGS__); \
-                fflush(LOG_FILE); \
-        } \
+	if (LOG_FILE) { \
+		fprintf(LOG_FILE, __VA_ARGS__); \
+		fflush(LOG_FILE); \
+	} \
 } while (0)
 
 static void load_ip_file(char *path, cidr_trie_t **trie)
@@ -209,7 +209,7 @@ void socket_pre_handle(struct proc_info *pinfp)
 #ifndef ENABLE_SECCOMP_BPF
 	/* If not TCP socket, ignore */
 	if ((si->type & SOCK_STREAM) < 1
-	     || (si->domain != AF_INET && si->domain != AF_INET6)) {
+		 || (si->domain != AF_INET && si->domain != AF_INET6)) {
 		free(si);
 		return;
 	}
@@ -230,41 +230,41 @@ void connect_pre_handle(struct proc_info *pinfp)
 	struct sockaddr_in dest_sa;
 	struct sockaddr_in6 dest_sa6;
 	unsigned short dest_ip_port;
-        struct in_addr dest_ip_addr;
-        char *dest_ip_addr_str;
-        char dest_str[INET6_ADDRSTRLEN];
+	struct in_addr dest_ip_addr;
+	char *dest_ip_addr_str;
+	char dest_str[INET6_ADDRSTRLEN];
 
-        getdata(pinfp->pid, addr, (char *)&dest_sa, sizeof(dest_sa));
+	getdata(pinfp->pid, addr, (char *)&dest_sa, sizeof(dest_sa));
 
-        if (dest_sa.sin_family == AF_INET) { /* IPv4 */
-                dest_ip_port = SOCKPORT(dest_sa);
-                dest_ip_addr.s_addr = SOCKADDR(dest_sa);
-                dest_ip_addr_str = inet_ntoa(dest_ip_addr);
-                if (ip4_is_ignore(dest_ip_addr.s_addr)) {
-                        LOG("direct connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
-                        return;
-                }
-        } else if (dest_sa.sin_family == AF_INET6) { /* IPv6 */
-                getdata(pinfp->pid, addr, (char *)&dest_sa6, sizeof(dest_sa6));
-                dest_ip_port = SOCKPORT6(dest_sa6);
-                inet_ntop(AF_INET6, &dest_sa6.sin6_addr, dest_str, INET6_ADDRSTRLEN);
-                dest_ip_addr_str = dest_str;
-                if (ip6_is_ignore(dest_sa6.sin6_addr.s6_addr)) {
-                        LOG("direct connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
-                        return;
-                }
-        } else {
-                return;
-        }
+	if (dest_sa.sin_family == AF_INET) { /* IPv4 */
+		dest_ip_port = SOCKPORT(dest_sa);
+		dest_ip_addr.s_addr = SOCKADDR(dest_sa);
+		dest_ip_addr_str = inet_ntoa(dest_ip_addr);
+		if (ip4_is_ignore(dest_ip_addr.s_addr)) {
+			LOG("direct connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
+			return;
+		}
+	} else if (dest_sa.sin_family == AF_INET6) { /* IPv6 */
+		getdata(pinfp->pid, addr, (char *)&dest_sa6, sizeof(dest_sa6));
+		dest_ip_port = SOCKPORT6(dest_sa6);
+		inet_ntop(AF_INET6, &dest_sa6.sin6_addr, dest_str, INET6_ADDRSTRLEN);
+		dest_ip_addr_str = dest_str;
+		if (ip6_is_ignore(dest_sa6.sin6_addr.s6_addr)) {
+			LOG("direct connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
+			return;
+		}
+	} else {
+		return;
+	}
 
-        LOG("proxy connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
+	LOG("proxy connect to %s:%d\n", dest_ip_addr_str, ntohs(dest_ip_port));
 
-        if (dest_sa.sin_family == AF_INET) { /* IPv4 */
-                memcpy(si->dest_addr, &dest_sa, sizeof(dest_sa));
-                si->dest_addr_len = sizeof(dest_sa);
-                putdata(pinfp->pid, addr, (char *)&PROXY_SA, sizeof(PROXY_SA));
-        } else { /* IPv6 */
-                memcpy(si->dest_addr, &dest_sa6, sizeof(dest_sa6));
+	if (dest_sa.sin_family == AF_INET) { /* IPv4 */
+		memcpy(si->dest_addr, &dest_sa, sizeof(dest_sa));
+		si->dest_addr_len = sizeof(dest_sa);
+		putdata(pinfp->pid, addr, (char *)&PROXY_SA, sizeof(PROXY_SA));
+	} else { /* IPv6 */
+		memcpy(si->dest_addr, &dest_sa6, sizeof(dest_sa6));
 		si->dest_addr_len = sizeof(dest_sa6);
 		putdata(pinfp->pid, addr, (char *)&PROXY_SA6, sizeof(PROXY_SA6));
 	}
@@ -450,7 +450,7 @@ end:
 int trace_syscall(struct proc_info *pinfp)
 {
 	return exiting(pinfp) ? trace_syscall_exiting(pinfp) :
-	    trace_syscall_entering(pinfp);
+		trace_syscall_entering(pinfp);
 }
 
 int do_trace()
@@ -479,7 +479,7 @@ int do_trace()
 				   PTRACE_O_TRACESECCOMP |
 #endif
 				   PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK) <
-			    0) {
+				0) {
 				perror("ptrace");
 				exit(errno);
 			}
@@ -497,7 +497,7 @@ int do_trace()
 		}
 #endif
 		if (WIFSIGNALED(status) || WIFEXITED(status)
-		    || !WIFSTOPPED(status)) {
+			|| !WIFSTOPPED(status)) {
 			exit_code = WEXITSTATUS(status);
 			/* TODO free pinfp */
 			continue;
@@ -510,8 +510,8 @@ int do_trace()
 		if (sig != SIGTRAP) {
 			siginfo_t si;
 			stopped =
-			    (ptrace(PTRACE_GETSIGINFO, child, 0, (long)&si) <
-			     0);
+				(ptrace(PTRACE_GETSIGINFO, child, 0, (long)&si) <
+				 0);
 			if (!stopped) {
 				/* It's signal-delivery-stop. Inject the signal */
 				goto end;
@@ -597,11 +597,11 @@ int client_main(int argc, char **argv)
 		.local_port             = &DEFAULT_LOCAL_PORT,
 		.pipe_path              = DEFAULT_LOCAL_PIPE_PAHT,
 		.blackip_file_path      = NULL,
-                .whiteip_file_path      = NULL,
-                .ignore_local           = &DEFAULT_IGNORE_LOCAL,
-                .username               = NULL,
-                .log_file_path          = NULL,
-        };
+		.whiteip_file_path      = NULL,
+		.ignore_local           = &DEFAULT_IGNORE_LOCAL,
+		.username               = NULL,
+		.log_file_path          = NULL,
+	};
 
 	__defer_free char *conf_file_path = NULL;
 	__defer_conf_free struct graftcp_conf file_conf;
@@ -610,7 +610,7 @@ int client_main(int argc, char **argv)
 	conf_init(&cmd_conf);
 
 	while ((opt = getopt_long(argc, argv, "+Vha:p:f:b:w:c:u:n", long_opts,
-			    	&index)) != -1) {
+					&index)) != -1) {
 		switch (opt) {
 		case 'a':
 			cmd_conf.local_addr = strdup(optarg);
@@ -672,15 +672,15 @@ int client_main(int argc, char **argv)
 			exit(0);
 		}
 	}
-        conf_read(conf_file_path, &file_conf);
-        conf_override(&conf, &file_conf);
-        conf_override(&conf, &cmd_conf);
+	conf_read(conf_file_path, &file_conf);
+	conf_override(&conf, &file_conf);
+	conf_override(&conf, &cmd_conf);
 
-        if (conf.log_file_path) {
-                LOG_FILE = fopen(conf.log_file_path, "a");
-                if (!LOG_FILE)
-                        perror("fopen log_file_path");
-        }
+	if (conf.log_file_path) {
+		LOG_FILE = fopen(conf.log_file_path, "a");
+		if (!LOG_FILE)
+			perror("fopen log_file_path");
+	}
 
 	if (conf.blackip_file_path)
 		load_blackip_file(conf.blackip_file_path);
