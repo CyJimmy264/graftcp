@@ -27,6 +27,7 @@ struct graftcp_conf {
 	char *whiteip_file_path;
 	bool *ignore_local;
 	char *username;
+	char *log_file_path;
 };
 
 typedef int (*config_cb)(const char *, const char *, struct graftcp_conf *);

@@ -26,6 +26,7 @@ static int config_pipe_path(const char *, const char *, struct graftcp_conf *);
 static int config_blackip_file_path(const char *, const char *, struct graftcp_conf *);
 static int config_whiteip_file_path(const char *, const char *, struct graftcp_conf *);
 static int config_ignore_local(const char *, const char *, struct graftcp_conf *);
+static int config_log_file_path(const char *, const char *, struct graftcp_conf *);
 
 static const struct graftcp_config_t config[] = {
 	{ "local_addr",        config_local_addr        },
@@ -34,6 +35,7 @@ static const struct graftcp_config_t config[] = {
 	{ "blackip_file_path", config_blackip_file_path },
 	{ "whiteip_file_path", config_whiteip_file_path },
 	{ "ignore_local",      config_ignore_local      },
+	{ "log_file_path",     config_log_file_path     },
 };
 
 static int config_local_addr(const char *key, const char *value, struct graftcp_conf *conf)
@@ -92,6 +94,14 @@ static int config_ignore_local(const char *key, const char *value, struct graftc
 	return 0;
 }
 
+static int config_log_file_path(const char *key, const char *value, struct graftcp_conf *conf)
+{
+	conf->log_file_path = strdup(value);
+	if (!conf->log_file_path)
+		return -1;
+	return 0;
+}
+
 static const size_t config_size = sizeof(config) / sizeof(struct graftcp_config_t);
 
 static const struct graftcp_config_t *graftcp_getconfig(const char *key)
@@ -132,7 +142,7 @@ static int right_space(char *buf, size_t len)
 	int i;
 	for (i = len - 1; i >= 0; i--)
 		if (buf[i] != ' ' && buf[i] != '\t' && buf[i] != '\0' &&
-		    buf[i] != '\n' && buf[i] != '\r')
+			buf[i] != '\n' && buf[i] != '\r')
 			return i + 1;
 	return 0;
 }
@@ -180,6 +190,7 @@ int conf_init(struct graftcp_conf *conf)
 	conf->whiteip_file_path = NULL;
 	conf->ignore_local = NULL;
 	conf->username = NULL;
+	conf->log_file_path = NULL;
 	return 0;
 }
 
@@ -212,6 +223,10 @@ void conf_free(struct graftcp_conf *conf)
 	if (conf->username) {
 		free(conf->username);
 		conf->username = NULL;
+	}
+	if (conf->log_file_path) {
+		free(conf->log_file_path);
+		conf->log_file_path = NULL;
 	}
 }
 
@@ -298,4 +313,6 @@ void conf_override(struct graftcp_conf *w, const struct graftcp_conf *r)
 		w->ignore_local = r->ignore_local;
 	if (r->username)
 		w->username = r->username;
+	if (r->log_file_path)
+		w->log_file_path = r->log_file_path;
 }
